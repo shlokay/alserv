@@ -5,7 +5,7 @@ from io import BytesIO
 
 st.set_page_config(page_title="Service Report Generator", page_icon="🧾", layout="centered")
 
-st.title("🧾 Filtered Service Report Generator")
+st.title("🧾 Service History Generator (by YASH MOTORS)")
 
 uploaded_file = st.file_uploader("Upload Excel File (.xlsx)", type=["xlsx"])
 
