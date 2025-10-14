@@ -5,7 +5,17 @@ from io import BytesIO
 
 st.set_page_config(page_title="Service Report Generator", page_icon="🧾", layout="centered")
 
-st.title("YASH MOTORS \n 🧾 Service Report Generator ")
+st.markdown(
+    """
+    <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="color:#2E86C1; margin-bottom: 0;">YASH MOTORS</h1>
+        <h3 style="color:#555;">🧾 Service Report Generator</h3>
+        <hr style="border: 1px solid #ddd;">
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 
 uploaded_file = st.file_uploader("Upload the Service History Excel File (.xlsx)", type=["xlsx"])
 
