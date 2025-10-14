@@ -5,9 +5,9 @@ from io import BytesIO
 
 st.set_page_config(page_title="Service Report Generator", page_icon="🧾", layout="centered")
 
-st.title("YASH MOTORS \n 🧾 Service History Generator ")
+st.title("YASH MOTORS \n 🧾 Service Report Generator ")
 
-uploaded_file = st.file_uploader("Upload Excel File (.xlsx)", type=["xlsx"])
+uploaded_file = st.file_uploader("Upload the Service History Excel File (.xlsx)", type=["xlsx"])
 
 if uploaded_file:
     df = pd.read_excel(uploaded_file)
