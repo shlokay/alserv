@@ -474,6 +474,184 @@
 
 
 # ITERATION 4-------------------------------------- NEXT DUE DATES: 
+# import streamlit as st
+# import pandas as pd
+# import re
+# from io import BytesIO
+# from dateutil.relativedelta import relativedelta
+
+# # Streamlit Page Config
+# st.set_page_config(page_title="Service Report Generator", page_icon="🧾", layout="centered")
+
+# # Header Section
+# st.markdown(
+#     """
+#     <div style="text-align: center; margin-bottom: 20px;">
+#         <h1 style="color:#2E86C1; margin-bottom: 0;">YASH MOTORS</h1>
+#         <h3 style="color:#555;">🧾 Service Report Generator</h3>
+#         <hr style="border: 1px solid #ddd;">
+#     </div>
+#     """,
+#     unsafe_allow_html=True
+# )
+
+# # Vehicle Type Selection
+# vehicle_type = st.radio("Select Vehicle Type", ["Haulage/Tractor", "Bus"])
+
+# # File Uploader
+# uploaded_file = st.file_uploader("Upload the Service History Excel File (.xlsx)", type=["xlsx"])
+
+# if uploaded_file:
+#     # Read and prepare data
+#     df = pd.read_excel(uploaded_file)
+#     df["Document Date"] = pd.to_datetime(df["Document Date"], errors="coerce")
+
+#     # --- OIL PART MAPPING ---
+#     oil_part_mapping = {
+#         "EN699991": "Engine Oil",
+#         "GB699991": "Crown Oil",
+#         "G9999994": "Gear Oil",
+#         "P9999999": "Steering Oil",
+#         "W9999999": "Steering Oil",
+#         "U9999995": "Clutch Oil"
+#     }
+
+#     # --- FILTER MAPPING ---
+#     filter_mapping = {
+#         "Air Filter": "Air Filter",
+#         "Fuel Filter": "Fuel Filter",
+#         "Oil Filter": "Oil Filter",
+#         "Adblue Tank Filter": "Adblue Tank Filter",
+#     }
+
+#     # --- SERVICE INTERVALS BASED ON VEHICLE TYPE ---
+#     service_intervals = {
+#         "Haulage/Tractor": {
+#             "Engine Oil": (80000, 18),
+#             "Engine Coolant": (320000, 36),
+#             "Gear Oil": (160000, 18),
+#             "Steering Oil": (160000, 24),
+#             "Crown Oil": (200000, 24),
+#             "Clutch Oil": (120000, 12),
+#             "Fuel Filter": (80000, 12),
+#             "Air Filter": (80000, 12)
+#         },
+#         "Bus": {
+#             "Engine Oil": (80000, 18),
+#             "Engine Coolant": (320000, 36),
+#             "Gear Oil": (120000, 18),
+#             "Steering Oil": (160000, 24),
+#             "Crown Oil": (200000, 24),
+#             "Clutch Oil": (120000, 12),
+#             "Fuel Filter": (80000, 12),
+#             "Air Filter": (80000, 12)
+#         }
+#     }
+
+#     intervals = service_intervals[vehicle_type]
+
+#     # --- FUNCTION TO FETCH OIL ENTRIES ---
+#     def get_oil_entries(group):
+#         result = {}
+
+#         for code, service in oil_part_mapping.items():
+#             sub = group[group["Labour value/part code"] == code].sort_values("Document Date", ascending=False)
+#             if sub.empty:
+#                 if f"Last {service} Changed" not in result:
+#                     result[f"Last {service} Changed"] = "N/A"
+#                     result[f"Next {service} Due"] = "N/A"
+#                 continue
+
+#             latest = sub.iloc[0]
+#             km_reading = latest.get("KM/HR Reading", "N/A")
+
+#             # --- LAST SERVICE INFO ---
+#             last_date = latest["Document Date"]
+#             result[f"Last {service} Changed"] = f"{last_date.strftime('%d.%m.%Y')} ({latest['Quantity']} L – {km_reading} KM)"
+
+#             # --- NEXT DUE CALCULATION ---
+#             if service in intervals and pd.notna(last_date) and pd.notna(km_reading):
+#                 km_interval, month_interval = intervals[service]
+#                 try:
+#                     next_km = int(km_reading) + km_interval
+#                 except Exception:
+#                     next_km = "N/A"
+#                 next_date = last_date + relativedelta(months=month_interval)
+#                 result[f"Next {service} Due"] = f"{next_date.strftime('%d.%m.%Y')} ({next_km} KM)"
+#             else:
+#                 result[f"Next {service} Due"] = "N/A"
+
+#         return pd.Series(result)
+
+#     # --- FUNCTION TO FETCH FILTER ENTRIES ---
+#     def get_filter_entries(group):
+#         result = {}
+#         for key, colname in filter_mapping.items():
+#             mask = group["Labour Value/Part description"].str.contains(key, case=False, na=False)
+#             mask &= ~group["Labour Value/Part description"].str.contains(r"R\s*&\s*R|R\s*and\s*R", flags=re.I, na=False)
+#             sub = group[mask].sort_values("Document Date", ascending=False)
+#             if sub.empty:
+#                 result[f"Last {colname} Changed"] = "N/A"
+#                 result[f"Next {colname} Due"] = "N/A"
+#             else:
+#                 latest = sub.iloc[0]
+#                 km_reading = latest.get("KM/HR Reading", "N/A")
+#                 last_date = latest["Document Date"]
+
+#                 result[f"Last {colname} Changed"] = (
+#                     f"{last_date.strftime('%d.%m.%Y')} "
+#                     f"({latest['Labour Value/Part description']}) – {km_reading} KM"
+#                 )
+
+#                 # Next due
+#                 if colname in intervals and pd.notna(last_date) and pd.notna(km_reading):
+#                     km_interval, month_interval = intervals[colname]
+#                     try:
+#                         next_km = int(km_reading) + km_interval
+#                     except Exception:
+#                         next_km = "N/A"
+#                     next_date = last_date + relativedelta(months=month_interval)
+#                     result[f"Next {colname} Due"] = f"{next_date.strftime('%d.%m.%Y')} ({next_km} KM)"
+#                 else:
+#                     result[f"Next {colname} Due"] = "N/A"
+#         return pd.Series(result)
+
+#     # --- APPLY FUNCTIONS GROUPWISE ---
+#     oil_result = df.groupby("Registration number", group_keys=False).apply(get_oil_entries).reset_index()
+#     filter_result = df.groupby("Registration number", group_keys=False).apply(get_filter_entries).reset_index()
+
+#     # --- MERGE RESULTS ---
+#     final_result = pd.merge(oil_result, filter_result, on="Registration number", how="outer")
+
+#     # --- CONVERT TO VERTICAL FORMAT ---
+#     vertical_dataframes = []
+#     for _, row in final_result.iterrows():
+#         reg_no = row["Registration number"]
+#         temp_df = pd.DataFrame({
+#             "Field": row.index,
+#             "Value": row.values
+#         })
+#         temp_df = temp_df[temp_df["Field"] != "Registration number"]
+#         temp_df = pd.concat([
+#             pd.DataFrame({"Field": ["Registration number"], "Value": [reg_no]}),
+#             temp_df
+#         ], ignore_index=True)
+#         vertical_dataframes.append(temp_df)
+
+#     combined_df = pd.concat(vertical_dataframes, ignore_index=True)
+
+#     # --- EXPORT TO EXCEL ---
+#     output = BytesIO()
+#     with pd.ExcelWriter(output, engine="openpyxl") as writer:
+#         combined_df.to_excel(writer, index=False)
+#     output.seek(0)
+
+#     # --- DISPLAY SUCCESS MESSAGE & DOWNLOAD BUTTON ---
+#     st.success("✅ Report generated successfully!")
+#     st.download_button("📥 Download Excel Report", output, file_name="service_report_with_next_due.xlsx")
+
+# --ITERATION 5-----------------------------------Next Due Dates, with new format: 
+
 import streamlit as st
 import pandas as pd
 import re
@@ -502,11 +680,10 @@ vehicle_type = st.radio("Select Vehicle Type", ["Haulage/Tractor", "Bus"])
 uploaded_file = st.file_uploader("Upload the Service History Excel File (.xlsx)", type=["xlsx"])
 
 if uploaded_file:
-    # Read and prepare data
     df = pd.read_excel(uploaded_file)
     df["Document Date"] = pd.to_datetime(df["Document Date"], errors="coerce")
 
-    # --- OIL PART MAPPING ---
+    # --- MAPPINGS ---
     oil_part_mapping = {
         "EN699991": "Engine Oil",
         "GB699991": "Crown Oil",
@@ -516,7 +693,6 @@ if uploaded_file:
         "U9999995": "Clutch Oil"
     }
 
-    # --- FILTER MAPPING ---
     filter_mapping = {
         "Air Filter": "Air Filter",
         "Fuel Filter": "Fuel Filter",
@@ -524,7 +700,7 @@ if uploaded_file:
         "Adblue Tank Filter": "Adblue Tank Filter",
     }
 
-    # --- SERVICE INTERVALS BASED ON VEHICLE TYPE ---
+    # --- SERVICE INTERVALS ---
     service_intervals = {
         "Haulage/Tractor": {
             "Engine Oil": (80000, 18),
@@ -553,23 +729,19 @@ if uploaded_file:
     # --- FUNCTION TO FETCH OIL ENTRIES ---
     def get_oil_entries(group):
         result = {}
-
         for code, service in oil_part_mapping.items():
             sub = group[group["Labour value/part code"] == code].sort_values("Document Date", ascending=False)
             if sub.empty:
-                if f"Last {service} Changed" not in result:
-                    result[f"Last {service} Changed"] = "N/A"
-                    result[f"Next {service} Due"] = "N/A"
+                result[f"Last {service} Changed"] = "N/A"
+                result[f"Next {service} Due"] = ""
                 continue
 
             latest = sub.iloc[0]
             km_reading = latest.get("KM/HR Reading", "N/A")
-
-            # --- LAST SERVICE INFO ---
             last_date = latest["Document Date"]
+
             result[f"Last {service} Changed"] = f"{last_date.strftime('%d.%m.%Y')} ({latest['Quantity']} L – {km_reading} KM)"
 
-            # --- NEXT DUE CALCULATION ---
             if service in intervals and pd.notna(last_date) and pd.notna(km_reading):
                 km_interval, month_interval = intervals[service]
                 try:
@@ -579,8 +751,7 @@ if uploaded_file:
                 next_date = last_date + relativedelta(months=month_interval)
                 result[f"Next {service} Due"] = f"{next_date.strftime('%d.%m.%Y')} ({next_km} KM)"
             else:
-                result[f"Next {service} Due"] = "N/A"
-
+                result[f"Next {service} Due"] = ""
         return pd.Series(result)
 
     # --- FUNCTION TO FETCH FILTER ENTRIES ---
@@ -592,7 +763,7 @@ if uploaded_file:
             sub = group[mask].sort_values("Document Date", ascending=False)
             if sub.empty:
                 result[f"Last {colname} Changed"] = "N/A"
-                result[f"Next {colname} Due"] = "N/A"
+                result[f"Next {colname} Due"] = ""
             else:
                 latest = sub.iloc[0]
                 km_reading = latest.get("KM/HR Reading", "N/A")
@@ -603,7 +774,6 @@ if uploaded_file:
                     f"({latest['Labour Value/Part description']}) – {km_reading} KM"
                 )
 
-                # Next due
                 if colname in intervals and pd.notna(last_date) and pd.notna(km_reading):
                     km_interval, month_interval = intervals[colname]
                     try:
@@ -613,32 +783,33 @@ if uploaded_file:
                     next_date = last_date + relativedelta(months=month_interval)
                     result[f"Next {colname} Due"] = f"{next_date.strftime('%d.%m.%Y')} ({next_km} KM)"
                 else:
-                    result[f"Next {colname} Due"] = "N/A"
+                    result[f"Next {colname} Due"] = ""
         return pd.Series(result)
 
-    # --- APPLY FUNCTIONS GROUPWISE ---
+    # --- APPLY GROUPWISE ---
     oil_result = df.groupby("Registration number", group_keys=False).apply(get_oil_entries).reset_index()
     filter_result = df.groupby("Registration number", group_keys=False).apply(get_filter_entries).reset_index()
-
-    # --- MERGE RESULTS ---
     final_result = pd.merge(oil_result, filter_result, on="Registration number", how="outer")
 
-    # --- CONVERT TO VERTICAL FORMAT ---
-    vertical_dataframes = []
+    # --- RESTRUCTURE TO SIDE-BY-SIDE FORMAT ---
+    formatted_dataframes = []
     for _, row in final_result.iterrows():
         reg_no = row["Registration number"]
-        temp_df = pd.DataFrame({
-            "Field": row.index,
-            "Value": row.values
-        })
-        temp_df = temp_df[temp_df["Field"] != "Registration number"]
-        temp_df = pd.concat([
-            pd.DataFrame({"Field": ["Registration number"], "Value": [reg_no]}),
-            temp_df
-        ], ignore_index=True)
-        vertical_dataframes.append(temp_df)
+        data = []
+        for col in row.index:
+            if col.startswith("Last "):
+                service_name = col
+                next_col = col.replace("Last", "Next")
+                data.append([
+                    service_name,
+                    row[col],
+                    row.get(next_col, "")
+                ])
+        temp_df = pd.DataFrame(data, columns=["Service Item", reg_no, "Next Due Date"])
+        formatted_dataframes.append(temp_df)
 
-    combined_df = pd.concat(vertical_dataframes, ignore_index=True)
+    # Combine all vehicle reports
+    combined_df = pd.concat(formatted_dataframes, ignore_index=True)
 
     # --- EXPORT TO EXCEL ---
     output = BytesIO()
@@ -648,4 +819,5 @@ if uploaded_file:
 
     # --- DISPLAY SUCCESS MESSAGE & DOWNLOAD BUTTON ---
     st.success("✅ Report generated successfully!")
-    st.download_button("📥 Download Excel Report", output, file_name="service_report_with_next_due.xlsx")
+    st.download_button("📥 Download Excel Report", output, file_name="service_report_side_by_side.xlsx")
+
