@@ -203,7 +203,6 @@
 
 
 # ITERATION 3----------------------------------------------------------------------------
-
 import streamlit as st
 import pandas as pd
 from io import BytesIO
@@ -219,7 +218,18 @@ if uploaded_file:
     df = pd.read_excel(uploaded_file)
 
     # Normalize column names
-    df.columns = df.columns.str.strip()
+    df.columns = df.columns.str.strip().str.lower()
+
+    # Identify possible column names
+    date_col = next((c for c in df.columns if "date" in c), None)
+    desc_col = next((c for c in df.columns if "description" in c), None)
+    item_col = next((c for c in df.columns if "item" in c), None)
+    reg_col = next((c for c in df.columns if "registration" in c), None)
+    km_col = next((c for c in df.columns if "km" in c or "odometer" in c), None)
+
+    if not all([date_col, desc_col, item_col, reg_col, km_col]):
+        st.error("❌ Could not detect all required columns (Service Date, Description, Item Number, Registration, KM). Please check the Excel headers.")
+        st.stop()
 
     # Mapping for filters
     filter_mapping = {
@@ -230,42 +240,42 @@ if uploaded_file:
     }
 
     # Function to get last service entry for oils
-    def get_last_service(df, column, keywords):
-        mask = df[column].str.contains("|".join(keywords), case=False, na=False)
+    def get_last_service(df, keywords):
+        mask = df[desc_col].str.contains("|".join(keywords), case=False, na=False)
         filtered = df[mask]
         if filtered.empty:
             return "N/A"
-        latest = filtered.sort_values(by="Service Date", ascending=False).iloc[0]
-        return f"{latest['Service Date'].strftime('%d.%m.%Y')} ({latest[column]} – {latest['KM Reading']} KM)"
+        latest = filtered.sort_values(by=date_col, ascending=False).iloc[0]
+        return f"{pd.to_datetime(latest[date_col]).strftime('%d.%m.%Y')} ({latest[desc_col]} – {latest[km_col]} KM)"
 
     # Function to get last filter change
     def get_filter_entries(df, filter_name):
-        mask = df["Labour Value/Part description"].str.contains(filter_mapping[filter_name], case=False, na=False)
-        mask &= ~df["Labour Value/Part description"].str.contains("R&R", case=False, na=False)
+        mask = df[desc_col].str.contains(filter_mapping[filter_name], case=False, na=False)
+        mask &= ~df[desc_col].str.contains("R&R", case=False, na=False)
         filtered = df[mask]
         if filtered.empty:
             return "N/A"
-        latest = filtered.sort_values(by="Service Date", ascending=False).iloc[0]
-        return f"{latest['Service Date'].strftime('%d.%m.%Y')} ({latest['Labour Value/Part description']}) – {latest['KM Reading']} KM"
+        latest = filtered.sort_values(by=date_col, ascending=False).iloc[0]
+        return f"{pd.to_datetime(latest[date_col]).strftime('%d.%m.%Y')} ({latest[desc_col]}) – {latest[km_col]} KM"
 
     # Function to get last steering oil change (P9999999 or W9999999)
     def get_last_steering_oil(df):
-        mask = df["Item Number"].astype(str).isin(["P9999999", "W9999999"])
+        mask = df[item_col].astype(str).isin(["P9999999", "W9999999"])
         filtered = df[mask]
         if filtered.empty:
             return "N/A"
-        latest = filtered.sort_values(by="Service Date", ascending=False).iloc[0]
-        return f"{latest['Service Date'].strftime('%d.%m.%Y')} ({latest['Item Number']} – {latest['KM Reading']} KM)"
+        latest = filtered.sort_values(by=date_col, ascending=False).iloc[0]
+        return f"{pd.to_datetime(latest[date_col]).strftime('%d.%m.%Y')} ({latest[item_col]} – {latest[km_col]} KM)"
 
     # Process each vehicle
     results = []
 
-    for reg_no, group in df.groupby("Registration number"):
+    for reg_no, group in df.groupby(reg_col):
         entry = {"Registration number": reg_no}
 
-        entry["Last Engine Oil Changed"] = get_last_service(group, "Labour Value/Part description", ["Engine Oil"])
-        entry["Last Crown Oil Changed"] = get_last_service(group, "Labour Value/Part description", ["Crown Oil", "Differential Oil"])
-        entry["Last Gear Oil Changed"] = get_last_service(group, "Labour Value/Part description", ["Gear Oil"])
+        entry["Last Engine Oil Changed"] = get_last_service(group, ["Engine Oil"])
+        entry["Last Crown Oil Changed"] = get_last_service(group, ["Crown Oil", "Differential Oil"])
+        entry["Last Gear Oil Changed"] = get_last_service(group, ["Gear Oil"])
         entry["Last Steering Oil Changed"] = get_last_steering_oil(group)
 
         for f in filter_mapping:
@@ -294,4 +304,3 @@ if uploaded_file:
         file_name="Service_Report_YashMotors.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-
