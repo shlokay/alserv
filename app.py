@@ -77,7 +77,6 @@
 #     st.success("✅ Report generated successfully!")
 #     st.download_button("📥 Download Excel Report", output, file_name="filtered_service_report.xlsx")
 
-
 import streamlit as st
 import pandas as pd
 import re
@@ -134,7 +133,6 @@ if uploaded_file:
             entry_text = f"{latest['Document Date'].strftime('%d.%m.%Y')} ({latest['Quantity']} L – {km_reading} KM)"
             result[service] = entry_text
 
-            # Handle multiple same-day or small quantity entries
             if latest["Quantity"] < 10 and len(sub) > 1:
                 second = sub.iloc[1]
                 km2 = second.get("KM/HR Reading", "N/A")
@@ -170,11 +168,32 @@ if uploaded_file:
     # --- MERGE RESULTS ---
     final_result = pd.merge(oil_result, filter_result, on="Registration number", how="outer")
 
+    # --- CONVERT TO VERTICAL FORMAT ---
+    vertical_dataframes = []
+    for _, row in final_result.iterrows():
+        reg_no = row["Registration number"]
+        temp_df = pd.DataFrame({
+            "Field": row.index,
+            "Value": row.values
+        })
+        # Move Registration number as a header-like top row
+        temp_df.columns = ["Field", "Value"]
+        temp_df = temp_df[temp_df["Field"] != "Registration number"]
+        temp_df = pd.concat([
+            pd.DataFrame({"Field": ["Registration number"], "Value": [reg_no]}),
+            temp_df
+        ], ignore_index=True)
+        vertical_dataframes.append(temp_df)
+
+    # Combine all registration numbers one below the other
+    combined_df = pd.concat(vertical_dataframes, ignore_index=True)
+
     # --- EXPORT TO EXCEL ---
     output = BytesIO()
-    final_result.to_excel(output, index=False)
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        combined_df.to_excel(writer, index=False)
     output.seek(0)
 
     # --- DISPLAY SUCCESS MESSAGE & DOWNLOAD BUTTON ---
     st.success("✅ Report generated successfully!")
-    st.download_button("📥 Download Excel Report", output, file_name="filtered_service_report.xlsx")
+    st.download_button("📥 Download Excel Report", output, file_name="vertical_service_report.xlsx")
