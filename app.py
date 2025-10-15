@@ -77,6 +77,7 @@
 #     st.success("✅ Report generated successfully!")
 #     st.download_button("📥 Download Excel Report", output, file_name="filtered_service_report.xlsx")
 
+
 import streamlit as st
 import pandas as pd
 import re
@@ -117,7 +118,7 @@ if uploaded_file:
         "Air Filter": "Air Filter",
         "Fuel Filter": "Fuel Filter",
         "Oil Filter": "Oil Filter",
-        "Adblue Tank Filter": "Adblue Tank Filter",  # ✅ newly added
+        "Adblue Tank Filter": "Adblue Tank Filter",
     }
 
     # --- FUNCTION TO FETCH OIL ENTRIES ---
@@ -129,16 +130,19 @@ if uploaded_file:
                 result[service] = "N/A"
                 continue
             latest = sub.iloc[0]
-            entry_text = f"{latest['Document Date'].strftime('%d.%m.%Y')} ({latest['Quantity']} L)"
+            km_reading = latest.get("KM/HR Reading", "N/A")
+            entry_text = f"{latest['Document Date'].strftime('%d.%m.%Y')} ({latest['Quantity']} L – {km_reading} KM)"
             result[service] = entry_text
 
             # Handle multiple same-day or small quantity entries
             if latest["Quantity"] < 10 and len(sub) > 1:
                 second = sub.iloc[1]
-                result[service] += f" | {second['Document Date'].strftime('%d.%m.%Y')} ({second['Quantity']} L)"
+                km2 = second.get("KM/HR Reading", "N/A")
+                result[service] += f" | {second['Document Date'].strftime('%d.%m.%Y')} ({second['Quantity']} L – {km2} KM)"
                 if (latest["Document Date"].date() == second["Document Date"].date()) and len(sub) > 2:
                     third = sub.iloc[2]
-                    result[service] += f" | {third['Document Date'].strftime('%d.%m.%Y')} ({third['Quantity']} L)"
+                    km3 = third.get("KM/HR Reading", "N/A")
+                    result[service] += f" | {third['Document Date'].strftime('%d.%m.%Y')} ({third['Quantity']} L – {km3} KM)"
         return pd.Series(result)
 
     # --- FUNCTION TO FETCH FILTER ENTRIES ---
@@ -152,7 +156,11 @@ if uploaded_file:
                 result[colname] = "N/A"
             else:
                 latest = sub.iloc[0]
-                result[colname] = f"{latest['Document Date'].strftime('%d.%m.%Y')} ({latest['Labour Value/Part description']})"
+                km_reading = latest.get("KM/HR Reading", "N/A")
+                result[colname] = (
+                    f"{latest['Document Date'].strftime('%d.%m.%Y')} "
+                    f"({latest['Labour Value/Part description']}) – {km_reading} KM"
+                )
         return pd.Series(result)
 
     # --- APPLY FUNCTIONS GROUPWISE ---
@@ -170,5 +178,3 @@ if uploaded_file:
     # --- DISPLAY SUCCESS MESSAGE & DOWNLOAD BUTTON ---
     st.success("✅ Report generated successfully!")
     st.download_button("📥 Download Excel Report", output, file_name="filtered_service_report.xlsx")
-
-
