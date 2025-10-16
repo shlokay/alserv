@@ -1033,12 +1033,20 @@ PART_CODE_TO_SERVICE = {
 }
 
 # ---------- filter keywords to search in description ----------
+# FILTER_KEYWORDS = {
+#     "Air Filter": "Air Filter",
+#     "Fuel Filter": "Fuel Filter",
+#     "Oil Filter": "Oil Filter",
+#     "Adblue Tank Filter": "Adblue Tank Filter",
+# }
+# ---------- filter keywords to search in description ----------
 FILTER_KEYWORDS = {
-    "Air Filter": "Air Filter",
-    "Fuel Filter": "Fuel Filter",
-    "Oil Filter": "Oil Filter",
-    "Adblue Tank Filter": "Adblue Tank Filter",
+    "Air Filter": ["Air Filter"],
+    "Fuel Filter": ["Fuel Filter"],
+    "Oil Filter": ["Oil Filter"],
+    "Adblue Tank Filter": ["Adblue Tank Filter", "DEF Tank Filter"],
 }
+
 
 # ---------- main ----------
 if uploaded_file:
@@ -1132,8 +1140,12 @@ if uploaded_file:
             # filters by description
             for fk, label in FILTER_KEYWORDS.items():
                 desc_series = grp[part_desc_col].astype(str).fillna("")
-                mask = desc_series.str.contains(label, case=False, na=False)
+                # mask = desc_series.str.contains(label, case=False, na=False)
+                # mask &= ~desc_series.str.contains(r"R\s*&\s*R|R\s*and\s*R", case=False, na=False)
+                keywords = FILTER_KEYWORDS[fk]
+                mask = desc_series.apply(lambda x: any(re.search(rf"\b{k}\b", x, flags=re.IGNORECASE) for k in keywords))
                 mask &= ~desc_series.str.contains(r"R\s*&\s*R|R\s*and\s*R", case=False, na=False)
+
                 if mask.any():
                     sub = grp[mask].sort_values(by=doc_date_col, ascending=False)
                     latest = sub.iloc[0]
