@@ -75,7 +75,7 @@ st.markdown(
 )
 
 uploaded_file = st.file_uploader("📤 Upload Service History Excel File (.xlsx)", type=["xlsx"])
-keyword = st.text_input("🔑 Enter keyword to search in 'Customer voice' column:")
+keyword = st.text_input("🔑 Enter Part Name (eg. crown, gear, etc.):")
 
 # Define the columns to display and export
 required_columns = [
