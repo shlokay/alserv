@@ -62,7 +62,7 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 
-st.set_page_config(page_title="🔍 Customer Voice Keyword Filter", layout="centered")
+st.set_page_config(page_title="🔍 BIGPARTS", layout="centered")
 
 st.markdown(
     """
