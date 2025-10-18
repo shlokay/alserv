@@ -68,7 +68,7 @@ st.markdown(
     """
     <div style='text-align: center;'>
         <h1 style='color: #2E86C1;'>YASH MOTORS</h1>
-        <h3>🧾 Service History Keyword Extractor</h3>
+        <h3>BIGPARTS</h3>
     </div>
     """,
     unsafe_allow_html=True
