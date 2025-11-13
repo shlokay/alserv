@@ -304,14 +304,14 @@ SERVICE_CODES = {
     "Engine Oil": ["EN699991"],
     "Gear Oil": ["G9999994"],
     "Crown Oil": ["GB699991"],
-    "Air Filter": ["MB442004", "MB442003", "MB442001"],
+    "Air Filter": ["MB442004", "MB442003", "MB442001", "MB442002", "MB442020"],
     "Fuel Filter": ["P5105607", "P5105608", "P5105609", "FHJ01400", "FHJ01600", "FHJ02300", "FHJ02400"],
     "Oil Filter": ["F7A05000", "F7A01500"],
-    "DEF Tank Filter": ["PET0000", "XFZ00200"],
+    "DEF Tank Filter": ["PET00001", "XFZ00200"],
     "Steering Oil": ["P9999999", "W9999999"],
     "Clutch Oil": ["U9999995"],
     "Engine Coolant": ["C9999991"],
-    "APDA Filter": ["PF600968", "PD601147", "PD601038"],
+    "APDA Filter": ["PD600968", "PD601147", "PD601037"],
 }
 
 # ---------- main ----------
