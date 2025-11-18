@@ -350,7 +350,7 @@ SERVICE_CODES = {
     "Air Filter": ["MB442004", "MB442003", "MB442001", "MB442002", "MB442020", "P5105689", "FG802600", "FG802700", "FG800900", "FG801000", "P5105688"],
     "Fuel Filter": ["P5105607", "P5105608", "P5105609", "FHJ01400", "FHJ01600", "FHJ02300", "FHJ02400"],
     "Oil Filter": ["F7A05000", "F7A01500"],
-    "DEF Tank Filter": ["PET00001", "XFZ00200"],
+    "DEF Tank Filter": ["PET00001", "XFZ00200", "XFZ01000"],
     "Steering Oil": ["P9999999", "W9999999"],
     "Clutch Oil": ["U9999995"],
     "Engine Coolant": ["C9999991"],
