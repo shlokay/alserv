@@ -351,7 +351,7 @@ SERVICE_CODES = {
     "Fuel Filter": ["P5105607", "P5105608", "P5105609", "FHJ01400", "FHJ01600", "FHJ02300", "FHJ02400"],
     "Oil Filter": ["F7A05000", "F7A01500"],
     "DEF Tank Filter": ["PET00001", "XFZ00200", "XFZ01000"],
-    "Steering Oil": ["P9999999", "W9999999", "PSA99994"],
+    "Steering Oil": ["P9999999", "W9999999", "PSA99994", "W9999998"],
     "Clutch Oil": ["U9999995"],
     "Engine Coolant": ["C9999991"],
     "APDA Filter": ["PD600968", "PD601147", "PD601037"],
